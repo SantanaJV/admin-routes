@@ -9,30 +9,39 @@ class AuthorizationError extends Error {
 }
 
 class UnauthorizedError extends AuthorizationError {
-  constructor(request = "Not Provided") {
+  constructor(userRole, requestedRole) {
     super("User not authorized to perform this request.");
-    this.data = { request };
+    this.data = { userRole, requestedRole };
     this.code = 403;
   }
 }
 
-class IncorrectPasswordError extends AuthorizationError {
+class MissingTokenError extends AuthorizationError {
   constructor() {
-    super("Incorrect password.");
+    super("No access token was provided.");
     this.code = 401;
   }
 }
 
-class UserNotFoundError extends AuthorizationError {
-  constructor(email) {
-    super(`User registered as ${email} was not found.`);
-    this.code = 404;
-    this.data = { email };
+class InvalidTokenError extends AuthorizationError {
+  constructor() {
+    super("The access token provided is invalid.");
+    this.code = 401;
+  }
+}
+
+class ExpiredTokenError extends AuthorizationError {
+  constructor() {
+    super(
+      "The access token provided is expired. Please, try to connect again."
+    );
+    this.code = 401;
   }
 }
 
 module.exports = {
   UnauthorizedError,
-  IncorrectPasswordError,
-  UserNotFoundError
+  MissingTokenError,
+  InvalidTokenError,
+  ExpiredTokenError
 };
