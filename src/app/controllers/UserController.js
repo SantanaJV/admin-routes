@@ -1,45 +1,59 @@
 const { User, validateUser } = require("../models/User");
 const {
   ValidationError,
-  UserAlreadyExistsError
+  UserAlreadyExistsError,
+  UserNotFoundError
 } = require("../errors/user.error");
 
 class UserController {
   async create(req, res, next) {
-    const { email, name, password } = req.body;
+    const { email } = req.body;
 
     errors = validateUser(req.body);
-    if (errors.length !== 0) return next(new ValidationError(errors));
+    if (errors.length) return next(new ValidationError(errors));
 
     let user = await User.findOne({ email });
     if (user) return next(new UserAlreadyExistsError(email));
 
-    user = await User.create({
-      email,
-      name,
-      password
-    });
+    user = await User.create(req.body);
 
-    const token = user.generateToken();
-
-    res.status(200).json({ token, user });
+    res.status(200).json({ message: "User created successfully!", user });
   }
 
   async read(req, res, next) {
-    res.status(200).json({
-      message: "Congratulations! You're authorized as a user!",
-      user: req.user
-    });
+    let user = await User.findById(req.params.id);
+
+    if (!user) return next(new UserNotFoundError());
+
+    res.status(200).json({ user });
   }
 
   async update(req, res, next) {
-    res.status(200).json({
-      message: "Congratulations! You're authorized as a super admin!",
-      user: req.user
+    const { email } = req.body;
+
+    errors = validateUser(req.body, {
+      checkMissing: false,
+      checkMatchPassword: true
     });
+    if (errors.length) return next(new ValidationError(errors));
+
+    let user = await User.findOne({ email });
+    if (user) return next(new UserAlreadyExistsError(email));
+
+    user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true
+    });
+    if (!user) return next(new InvalidIdError());
+
+    res.status(200).json({ user });
   }
 
-  async delete(req, res, next) {}
+  async delete(req, res, next) {
+    let user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return next(new InvalidIdError());
+
+    res.status(200).json({ message: "User successfully deleted.", user });
+  }
 }
 
 module.exports = new UserController();

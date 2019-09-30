@@ -5,7 +5,8 @@ mongoose.connect(
   process.env.ADMIN_DB_HOST,
   {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false
   },
   err => {
     if (err) throw err;

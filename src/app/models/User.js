@@ -45,6 +45,13 @@ userSchema.pre("save", async function(next) {
   }
 });
 
+userSchema.pre("findOneAndUpdate", async function(next) {
+  if (this._update.password)
+    this._update.password = await bcrypt.hash(this._update.password, 12);
+
+  next();
+});
+
 userSchema.methods.comparePassword = function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
@@ -53,13 +60,19 @@ userSchema.methods.generateToken = function() {
   return jwt.sign({ id: this.id }, process.env.ADMIN_JWT_SECRET);
 };
 
-validateUser = ({ email, password, name, matchPassword }) => {
+validateUser = (
+  { email, password, name, matchPassword },
+  validationOptions = {}
+) => {
   errors = [];
 
-  if (!email) errors.push("Email field is missing.");
-  if (!password) errors.push("Password field is missing.");
-  if (!name) errors.push("Name field is missing.");
-  if (!matchPassword) errors.push("Match password is missing.");
+  const { checkMissing = true, checkMatchPassword = true } = validationOptions;
+
+  if (!email && checkMissing) errors.push("Email field is missing.");
+  if (!password && checkMissing) errors.push("Password field is missing.");
+  if (!name && checkMissing) errors.push("Name field is missing.");
+  if (!matchPassword && password && checkMatchPassword)
+    errors.push("Match password is missing.");
 
   if (email && email.length > 255)
     errors.push("Email field has too many characters (Max. 255)");

@@ -33,6 +33,14 @@ class UserNotFoundError extends UserError {
   }
 }
 
+class InvalidIdError extends UserError {
+  constructor(id) {
+    super(`User with id ${id} was not found.`);
+    this.code = 404;
+    this.data = { id };
+  }
+}
+
 class UserAlreadyExistsError extends UserError {
   constructor(email) {
     super(`User registered as ${email} already exists.`);
@@ -45,5 +53,6 @@ module.exports = {
   IncorrectPasswordError,
   UserNotFoundError,
   ValidationError,
-  UserAlreadyExistsError
+  UserAlreadyExistsError,
+  InvalidIdError
 };
